@@ -65,7 +65,7 @@ export default function Orders({ orders, setOrders, showToast, supabaseClient })
     }
   };
 
-  const verifyReservedPayment = (oId) => {
+  const verifyReservedPayment = async (oId) => {
     const originalIndex = orders.findIndex(x => x.id === oId);
     if (originalIndex === -1) return;
 
@@ -73,10 +73,26 @@ export default function Orders({ orders, setOrders, showToast, supabaseClient })
     updated[originalIndex].status = 'COMPLETED';
     updated[originalIndex].refNum = 'MEETUP-CASH';
     setOrders(updated);
-    showToast('Meetup order completed successfully!');
+
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('orders')
+          .update({ status: 'COMPLETED', pickup_location: 'Meetup Handoff' })
+          .eq('order_id', oId);
+        
+        if (error) throw error;
+        showToast('✅ Meetup order completed successfully in live Supabase DB!');
+      } catch (err) {
+        console.warn('Supabase DB update failed, loaded locally.', err);
+        showToast('Meetup order completed successfully!');
+      }
+    } else {
+      showToast('Meetup order completed successfully!');
+    }
   };
 
-  const declinePayment = (oId) => {
+  const declinePayment = async (oId) => {
     const originalIndex = orders.findIndex(x => x.id === oId);
     if (originalIndex === -1) return;
 
@@ -84,7 +100,23 @@ export default function Orders({ orders, setOrders, showToast, supabaseClient })
     updated[originalIndex].status = 'REJECTED';
     updated[originalIndex].refNum = '';
     setOrders(updated);
-    showToast('Payment declined. Student notified to upload a valid GCash receipt.', true);
+
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('orders')
+          .update({ status: 'REJECTED' })
+          .eq('order_id', oId);
+        
+        if (error) throw error;
+        showToast('❌ Payment declined and status updated in live Supabase DB!');
+      } catch (err) {
+        console.warn('Supabase DB update failed, loaded locally.', err);
+        showToast('Payment declined. Student notified to upload a valid GCash receipt.', true);
+      }
+    } else {
+      showToast('Payment declined. Student notified to upload a valid GCash receipt.', true);
+    }
   };
 
   return (
