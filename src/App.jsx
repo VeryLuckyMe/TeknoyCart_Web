@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Orders from './components/Orders';
@@ -69,147 +69,148 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // ── Standalone Supabase Sync Callback ──
+  const syncSupabase = useCallback(async () => {
+    try {
+      // 1. Fetch products joined with variants + inventory for stock qty
+      const { data: prodData, error: prodErr } = await supabase
+        .from('products')
+        .select(`
+          product_id,
+          name,
+          description,
+          base_price,
+          status,
+          category_id,
+          product_variants (
+            variant_id,
+            variant_name,
+            variant_value,
+            additional_price,
+            inventory (
+              stock_qty
+            )
+          )
+        `)
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: false });
+
+      if (prodErr) throw prodErr;
+
+      if (prodData && prodData.length > 0) {
+        const formatted = prodData.map((p, idx) => {
+          // Flatten variants: summarise all variant names
+          const variants = p.product_variants || [];
+          const varLabel = variants.length > 0
+            ? variants.map(v => v.variant_value).filter(v => v !== 'Default').join(', ') || 'Standard'
+            : 'Standard';
+
+          // Sum total stock across all variants
+          const totalStock = variants.reduce((acc, v) => {
+            const inv = v.inventory;
+            return acc + (Array.isArray(inv) ? inv.reduce((a, i) => a + (i.stock_qty || 0), 0) : (inv?.stock_qty || 0));
+          }, 0);
+
+          return {
+            id: `PRD-${String(idx + 1).padStart(5, '0')}`,
+            _supabaseId: p.product_id,
+            name: p.name,
+            category: CATEGORY_MAP[p.category_id] || 'Others',
+            price: parseFloat(p.base_price || 0),
+            variations: varLabel,
+            stock: totalStock || 12, // default 12 if no inventory row yet
+          };
+        });
+
+        setProducts(formatted);
+        setDbConnected(true);
+        console.log(`✅ Synced ${formatted.length} products from Supabase.`);
+      } else {
+        // No rows yet, stay with fallback but mark connected
+        setDbConnected(true);
+        console.log('ℹ️ Supabase connected but products table is empty. Showing demo data.');
+      }
+
+      // 2. Fetch orders with relational joins for real identities, item names, and proofs
+      const { data: orderData, error: orderErr } = await supabase
+        .from('orders')
+        .select(`
+          order_id,
+          total_amount,
+          status,
+          pickup_location,
+          created_at,
+          buyer_id,
+          seller_id,
+          quantity,
+          unit_price,
+          buyer:users!buyer_id (
+            full_name,
+            email
+          ),
+          product_variants (
+            variant_name,
+            variant_value,
+            products (
+              name,
+              description
+            )
+          ),
+          payment_proofs (
+            image_url,
+            status
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!orderErr && orderData && orderData.length > 0) {
+        const formattedOrders = orderData.map((o, idx) => {
+          const buyerProfile = o.buyer || {};
+          const buyerName = buyerProfile.full_name || 'Wildcat Student Buyer';
+          const buyerEmail = buyerProfile.email || 'wildcat.buyer@my.cit.edu';
+          const studentId = o.buyer_id
+            ? `CIT-${o.buyer_id.substring(0, 8).toUpperCase()}`
+            : `CIT-100${idx + 1}`;
+          
+          const variant = o.product_variants || {};
+          const product = variant.products || {};
+          const itemName = product.name || 'Campus Merchandise';
+          const itemDesc = `Size/Type: ${variant.variant_value || 'Default'} | Qty: ${o.quantity}`;
+          
+          // Get GCash receipt proof if exists
+          const receiptUrl = (o.payment_proofs && o.payment_proofs.length > 0) 
+            ? o.payment_proofs[0].image_url 
+            : 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300';
+
+          return {
+            id: o.order_id,
+            displayId: `ORD-${o.order_id?.substring(0, 8).toUpperCase() || idx}`,
+            buyer: buyerName,
+            studentId: studentId,
+            dept: buyerEmail.endsWith('@cit.edu') ? 'College of Computer Studies' : 'College of Engineering & Architecture',
+            contact: '09' + String(10000000 + (idx * 179) % 90000000), // pseudo-random valid contact
+            time: new Date(o.created_at).toLocaleDateString(),
+            status: o.status,
+            amount: parseFloat(o.total_amount || 0),
+            items: [{ name: itemName, desc: itemDesc, price: parseFloat(o.unit_price || 0) }],
+            receipt: receiptUrl,
+            refNum: ''
+          };
+        });
+        setOrders(formattedOrders);
+      }
+
+    } catch (err) {
+      setDbConnected(false);
+      console.warn('⚠️ Supabase unreachable, running in offline demo mode.', err.message || err);
+    }
+  }, []);
+
   // ── Supabase initial sync ──
   useEffect(() => {
-    async function syncSupabase() {
-      try {
-        // 1. Fetch products joined with variants + inventory for stock qty
-        const { data: prodData, error: prodErr } = await supabase
-          .from('products')
-          .select(`
-            product_id,
-            name,
-            description,
-            base_price,
-            status,
-            category_id,
-            product_variants (
-              variant_id,
-              variant_name,
-              variant_value,
-              additional_price,
-              inventory (
-                stock_qty
-              )
-            )
-          `)
-          .eq('status', 'ACTIVE')
-          .order('created_at', { ascending: false });
-
-        if (prodErr) throw prodErr;
-
-        if (prodData && prodData.length > 0) {
-          const formatted = prodData.map((p, idx) => {
-            // Flatten variants: summarise all variant names
-            const variants = p.product_variants || [];
-            const varLabel = variants.length > 0
-              ? variants.map(v => v.variant_value).filter(v => v !== 'Default').join(', ') || 'Standard'
-              : 'Standard';
-
-            // Sum total stock across all variants
-            const totalStock = variants.reduce((acc, v) => {
-              const inv = v.inventory;
-              return acc + (Array.isArray(inv) ? inv.reduce((a, i) => a + (i.stock_qty || 0), 0) : (inv?.stock_qty || 0));
-            }, 0);
-
-            return {
-              id: `PRD-${String(idx + 1).padStart(5, '0')}`,
-              _supabaseId: p.product_id,
-              name: p.name,
-              category: CATEGORY_MAP[p.category_id] || 'Others',
-              price: parseFloat(p.base_price || 0),
-              variations: varLabel,
-              stock: totalStock || 12, // default 12 if no inventory row yet
-            };
-          });
-
-          setProducts(formatted);
-          setDbConnected(true);
-          console.log(`✅ Synced ${formatted.length} products from Supabase.`);
-        } else {
-          // No rows yet, stay with fallback but mark connected
-          setDbConnected(true);
-          console.log('ℹ️ Supabase connected but products table is empty. Showing demo data.');
-        }
-
-        // 2. Fetch orders with relational joins for real identities, item names, and proofs
-        const { data: orderData, error: orderErr } = await supabase
-          .from('orders')
-          .select(`
-            order_id,
-            total_amount,
-            status,
-            pickup_location,
-            created_at,
-            buyer_id,
-            seller_id,
-            quantity,
-            unit_price,
-            buyer:users!buyer_id (
-              full_name,
-              email
-            ),
-            product_variants (
-              variant_name,
-              variant_value,
-              products (
-                name,
-                description
-              )
-            ),
-            payment_proofs (
-              image_url,
-              status
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (!orderErr && orderData && orderData.length > 0) {
-          const formattedOrders = orderData.map((o, idx) => {
-            const buyerProfile = o.buyer || {};
-            const buyerName = buyerProfile.full_name || 'Wildcat Student Buyer';
-            const buyerEmail = buyerProfile.email || 'wildcat.buyer@my.cit.edu';
-            const studentId = o.buyer_id
-              ? `CIT-${o.buyer_id.substring(0, 8).toUpperCase()}`
-              : `CIT-100${idx + 1}`;
-            
-            const variant = o.product_variants || {};
-            const product = variant.products || {};
-            const itemName = product.name || 'Campus Merchandise';
-            const itemDesc = `Size/Type: ${variant.variant_value || 'Default'} | Qty: ${o.quantity}`;
-            
-            // Get GCash receipt proof if exists
-            const receiptUrl = (o.payment_proofs && o.payment_proofs.length > 0) 
-              ? o.payment_proofs[0].image_url 
-              : 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300';
-
-            return {
-              id: o.order_id,
-              displayId: `ORD-${o.order_id?.substring(0, 8).toUpperCase() || idx}`,
-              buyer: buyerName,
-              studentId: studentId,
-              dept: buyerEmail.endsWith('@cit.edu') ? 'College of Computer Studies' : 'College of Engineering & Architecture',
-              contact: '09' + String(10000000 + (idx * 179) % 90000000), // pseudo-random valid contact
-              time: new Date(o.created_at).toLocaleDateString(),
-              status: o.status,
-              amount: parseFloat(o.total_amount || 0),
-              items: [{ name: itemName, desc: itemDesc, price: parseFloat(o.unit_price || 0) }],
-              receipt: receiptUrl,
-              refNum: ''
-            };
-          });
-          setOrders(formattedOrders);
-        }
-
-      } catch (err) {
-        setDbConnected(false);
-        console.warn('⚠️ Supabase unreachable, running in offline demo mode.', err.message || err);
-      }
-    }
-
     syncSupabase();
-  }, []);
+  }, [syncSupabase]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -218,7 +219,7 @@ export default function App() {
       case 'orders':
         return <Orders orders={orders} setOrders={setOrders} showToast={showToast} supabaseClient={supabase} />;
       case 'inventory':
-        return <Inventory products={products} setProducts={setProducts} showToast={showToast} supabaseClient={supabase} />;
+        return <Inventory products={products} setProducts={setProducts} showToast={showToast} supabaseClient={supabase} onSync={syncSupabase} />;
       case 'moderation':
         return <Moderation showToast={showToast} supabaseClient={supabase} />;
       default:

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Inventory({ products, setProducts, showToast, supabaseClient }) {
+export default function Inventory({ products, setProducts, showToast, supabaseClient, onSync }) {
   const [selectedInvCategory, setSelectedInvCategory] = useState('all');
   const [searchStr, setSearchStr] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // Form states for Add Product
   const [addName, setAddName] = useState('');
@@ -11,6 +12,19 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
   const [addPrice, setAddPrice] = useState('');
   const [addVariations, setAddVariations] = useState('');
   const [addStock, setAddStock] = useState('');
+
+  const handleSync = async () => {
+    if (!onSync) return;
+    setSyncing(true);
+    try {
+      await onSync();
+      showToast('✅ Synced live inventory catalog from Supabase!');
+    } catch (e) {
+      showToast('Failed to sync catalog.', true);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const filteredProducts = products.filter(item => {
     // category filter
@@ -225,6 +239,16 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
           <p className="page-subtitle">Track listed items, configure stock variances, and add direct retail inventory (SRS FR-09).</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {onSync && (
+            <button
+              className="btn btn-outline"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={handleSync}
+              disabled={syncing}
+            >
+              {syncing ? '⟳ Syncing...' : '⟳ Sync Catalog'}
+            </button>
+          )}
           <button className="btn btn-outline" onClick={simulateExcelExport}>Export Spreadsheet</button>
           <button className="btn btn-maroon" onClick={() => setShowAddModal(true)}>Add New Product</button>
         </div>
