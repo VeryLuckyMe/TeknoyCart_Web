@@ -27,7 +27,7 @@ export default function Moderation({ showToast, supabaseClient }) {
         let status = 'Pending';
         if (u.is_verified === true) status = 'Verified';
         // Heuristic: flag accounts with suspicious (non-CIT) email
-        if (u.email && !u.email.endsWith('@cit.edu') && !u.email.endsWith('@my.cit.edu')) {
+        if (u.email && !u.email.endsWith('@cit.edu')) {
           status = 'Flagged';
         }
 
@@ -186,7 +186,7 @@ export default function Moderation({ showToast, supabaseClient }) {
             `Student ID: ${v.studentId}\n` +
             `Email: ${v.email}\n` +
             `Status flag: Warning flagged by triggers.\n` +
-            `Details: Email domain does not match verified @cit.edu or @my.cit.edu domain.`);
+            `Details: Email domain does not match verified @cit.edu or @cit.edu domain.`);
     }
   };
 
@@ -313,7 +313,7 @@ export default function Moderation({ showToast, supabaseClient }) {
                     if (v.status === 'Flagged') statusBadgeClass = 'badge-flagged';
                     if (v.status === 'Rejected') statusBadgeClass = 'badge-flagged';
 
-                    const emailStyle = (v.email === 'Email mismatch' || (!v.email.endsWith('@cit.edu') && !v.email.endsWith('@my.cit.edu') && v.email !== 'N/A'))
+                    const emailStyle = (v.email === 'Email mismatch' || (!v.email.endsWith('@cit.edu') && !v.email.endsWith('@cit.edu') && v.email !== 'N/A'))
                       ? { color: 'var(--error)', fontWeight: 700, fontStyle: 'italic' }
                       : { color: 'var(--text-muted)' };
 

@@ -22,8 +22,8 @@ INSERT INTO users (full_name, email, password_hash, role, is_verified)
 VALUES
   ('CSS Society Merch',     'css.merch@cit.edu',        '$2a$12$demo_hash_seller_css_society_001', 'SELLER', TRUE),
   ('CEA Store Admin',       'cea.store@cit.edu',         '$2a$12$demo_hash_seller_cea_store_002',  'SELLER', TRUE),
-  ('Wildcat Student Buyer', 'wildcat.buyer@my.cit.edu',  '$2a$12$demo_hash_buyer_wildcat_001',     'BUYER',  TRUE),
-  ('Maria Santos Demo',     'maria.santos@my.cit.edu',   '$2a$12$demo_hash_buyer_maria_002',       'BUYER',  TRUE),
+  ('Wildcat Student Buyer', 'wildcat.buyer@cit.edu',  '$2a$12$demo_hash_buyer_wildcat_001',     'BUYER',  TRUE),
+  ('Maria Santos Demo',     'maria.santos@cit.edu',   '$2a$12$demo_hash_buyer_maria_002',       'BUYER',  TRUE),
   ('TeknoyCart Admin',      'admin@cit.edu',             '$2a$12$demo_hash_admin_teknoycart_001',  'ADMIN',  TRUE)
 ON CONFLICT (email) DO NOTHING;
 

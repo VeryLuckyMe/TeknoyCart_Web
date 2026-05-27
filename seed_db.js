@@ -61,7 +61,7 @@ async function seed() {
       },
       {
         full_name: 'Wildcat Student Buyer',
-        email: 'wildcat.buyer@my.cit.edu',
+        email: 'wildcat.buyer@cit.edu',
         password_hash: '$2a$12$VwT.l.mockhashforcapstonepresentationonly123',
         role: 'BUYER',
         is_verified: true

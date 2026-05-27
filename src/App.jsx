@@ -168,7 +168,7 @@ export default function App() {
         const formattedOrders = orderData.map((o, idx) => {
           const buyerProfile = o.buyer || {};
           const buyerName = buyerProfile.full_name || 'Wildcat Student Buyer';
-          const buyerEmail = buyerProfile.email || 'wildcat.buyer@my.cit.edu';
+          const buyerEmail = buyerProfile.email || 'wildcat.buyer@cit.edu';
           const studentId = o.buyer_id
             ? `CIT-${o.buyer_id.substring(0, 8).toUpperCase()}`
             : `CIT-100${idx + 1}`;
