@@ -236,15 +236,7 @@ export default function App() {
       </main>
 
       {toast && (
-        <div
-          className="admin-toast"
-          style={{
-            background: toast.isError
-              ? 'linear-gradient(135deg, var(--error), hsl(0, 80%, 48%))'
-              : 'linear-gradient(135deg, var(--cit-maroon), var(--cit-maroon-light))',
-            borderColor: toast.isError ? 'rgba(255,255,255,0.4)' : 'var(--cit-gold)'
-          }}
-        >
+        <div className={`admin-toast ${toast.isError ? 'error' : 'success'}`}>
           <span className="toast-icon">{toast.isError ? '✕' : '🛡️'}</span>
           <span id="toast-text">{toast.message}</span>
         </div>

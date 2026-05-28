@@ -170,7 +170,7 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
           <h1 className="page-title">Wildcat Dashboard</h1>
           <p className="page-subtitle">Unified Capstone 1 Presentation Overview & Live Metrics (Module 8.1).</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="header-actions">
           <button className="btn btn-outline" onClick={() => handleExport('csv')}>Export CSV</button>
           <button className="btn btn-maroon" onClick={() => handleExport('pdf')}>Export PDF Report</button>
         </div>
@@ -179,50 +179,50 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-header">
-            <span>Total Sales (₱)</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success)' }}>₱</div>
+            <span>Total Sales</span>
+            <div className="stat-icon-wrapper icon-success">₱</div>
           </div>
           <div className="stat-value">₱ {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--success)', fontWeight: 600 }}>+24%</span> vs last semester
+            <span style={{ color: 'var(--success)', fontWeight: 650 }}>+24%</span> vs last semester
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span>Active Listings</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--cit-maroon-alpha)', color: 'var(--cit-maroon)' }}>🛍️</div>
+            <div className="stat-icon-wrapper icon-maroon">🛍️</div>
           </div>
           <div className="stat-value">{activeCatalogCount} Items</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--cit-maroon)', fontWeight: 600 }}>Live sync</span> database feed
+            <span style={{ color: 'var(--cit-maroon)', fontWeight: 650 }}>Live sync</span> database feed
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span>Completed Orders</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'hsl(200, 100%, 96%)', color: 'var(--accent-blue)' }}>✓</div>
+            <div className="stat-icon-wrapper icon-info">✓</div>
           </div>
           <div className="stat-value">{completedOrdersCount}</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>98.2%</span> handoff rate
+            <span style={{ color: 'var(--info)', fontWeight: 650 }}>98.2%</span> handoff rate
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span>Active Vendors</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--cit-gold-alpha)', color: 'var(--cit-gold-dark)' }}>🛡️</div>
+            <div className="stat-icon-wrapper icon-gold">🛡️</div>
           </div>
           <div className="stat-value">{activeVendors} verified</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--cit-gold-dark)', fontWeight: 600 }}>100% verified</span> institutional emails
+            <span style={{ color: 'var(--cit-maroon)', fontWeight: 650 }}>100% verified</span> institutional emails
           </div>
         </div>
       </div>
 
-      <div className="two-column-layout" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="two-column-equal">
         <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Product Categories Distribution</h2>
@@ -278,19 +278,19 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
                     return (
                       <tr key={l.id}>
                         <td>
-                          <div style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{l.id}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{l.time}</div>
+                          <div className="log-id-wrapper">{l.id}</div>
+                          <div className="log-time">{l.time}</div>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{l.buyer}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{l.seller}</div>
+                          <div className="log-buyer">{l.buyer}</div>
+                          <div className="log-seller">{l.seller}</div>
                         </td>
                         <td>
                           <span className={`badge ${badgeClass}`}>
                             {l.status}
                           </span>
                         </td>
-                        <td style={{ fontWeight: 700, color: 'var(--cit-maroon)' }}>
+                        <td className="log-amount">
                           ₱ {l.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                       </tr>

@@ -59,7 +59,7 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
         </div>
       </div>
 
-      <nav style={{ flexGrow: 1 }}>
+      <nav className="sidebar-nav">
         <ul className="nav-list">
           {menuItems.map((item) => (
             <li key={item.id}>
@@ -76,24 +76,15 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
       </nav>
 
       <div className="sidebar-footer">
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: dbConnected === true ? 'rgba(52, 199, 89, 0.12)' : dbConnected === false ? 'rgba(255, 159, 10, 0.12)' : 'rgba(255,255,255,0.06)',
-          border: `1px solid ${dbConnected === true ? 'rgba(52,199,89,0.4)' : dbConnected === false ? 'rgba(255,159,10,0.4)' : 'rgba(255,255,255,0.1)'}`,
-          borderRadius: '8px', padding: '8px 10px', marginBottom: '10px'
-        }}>
-          <span style={{
-            width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
-            background: dbConnected === true ? '#34C759' : dbConnected === false ? '#FF9F0A' : '#999',
-            boxShadow: dbConnected === true ? '0 0 6px rgba(52,199,89,0.8)' : 'none'
-          }} />
-          <span style={{ fontSize: '10px', fontWeight: 600, color: dbConnected === true ? '#34C759' : dbConnected === false ? '#FF9F0A' : '#999' }}>
+        <div className={`db-status-pill ${dbConnected === true ? 'live' : dbConnected === false ? 'offline' : 'connecting'}`}>
+          <span className="db-status-indicator" />
+          <span className="db-status-label">
             {dbConnected === true ? 'Supabase Live' : dbConnected === false ? 'Offline Mode' : 'Connecting…'}
           </span>
         </div>
-        <div>Cebu Institute of Technology</div>
-        <div style={{ color: 'var(--cit-gold)', fontWeight: 700 }}>Wildcats Marketplace</div>
-        <div style={{ fontSize: '9px', marginTop: '4px', opacity: 0.8 }}>Capstone Team 45</div>
+        <div className="sidebar-footer-school">Cebu Institute of Technology</div>
+        <div className="sidebar-footer-brand">Wildcats Marketplace</div>
+        <div className="sidebar-footer-capstone">Capstone Team 45</div>
       </div>
     </aside>
   );

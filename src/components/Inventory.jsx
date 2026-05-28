@@ -238,11 +238,10 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
           <h1 className="page-title">Catalog & Inventory</h1>
           <p className="page-subtitle">Track listed items, configure stock variances, and add direct retail inventory (SRS FR-09).</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="header-actions">
           {onSync && (
             <button
               className="btn btn-outline"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               onClick={handleSync}
               disabled={syncing}
             >
@@ -250,13 +249,13 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
             </button>
           )}
           <button className="btn btn-outline" onClick={simulateExcelExport}>Export Spreadsheet</button>
-          <button className="btn btn-maroon" onClick={() => setShowAddModal(true)}>Add New Product</button>
+          <button className="btn btn-maroon" onClick={() => setShowAddModal(true)}>Add Product</button>
         </div>
       </div>
 
       <div className="content-card">
-        <div className="card-header" style={{ flexDirection: 'column', gap: '20px', alignItems: 'stretch' }}>
-          <div className="search-filter-bar" style={{ margin: 0 }}>
+        <div className="card-header card-header-column">
+          <div className="search-filter-bar-no-margin">
             <div className="search-input-wrapper">
               <svg className="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
@@ -301,7 +300,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
             <tbody>
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                  <td colSpan="7" className="empty-state">
                     No matching inventory catalog items.
                   </td>
                 </tr>
@@ -310,37 +309,25 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
                   const initialChar = item.name.charAt(0).toUpperCase();
                   let colorBg = 'var(--cit-maroon)';
                   if (item.category === 'Books') colorBg = 'var(--cit-gold-dark)';
-                  if (item.category === 'Electronics') colorBg = 'var(--accent-blue)';
+                  if (item.category === 'Electronics') colorBg = 'var(--info)';
 
                   return (
                     <tr key={item.id}>
                       <td>
-                        <div style={{
-                          width: '44px',
-                          height: '44px',
-                          background: colorBg,
-                          borderRadius: 'var(--radius-sm)',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'center',
-                          fontWeight: 800,
-                          fontFamily: 'Outfit',
-                          justifyContent: 'center'
-                        }}>
+                        <div className="table-thumbnail" style={{ background: colorBg }}>
                           {initialChar}
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{item.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>ID: {item.id}</div>
+                        <div className="log-buyer">{item.name}</div>
+                        <div className="log-time">ID: {item.id}</div>
                       </td>
                       <td>{item.category}</td>
-                      <td style={{ fontWeight: 'bold', color: 'var(--cit-maroon)' }}>
+                      <td className="item-price">
                         ₱ {item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--neutral-grey)', padding: '4px 8px', borderRadius: '4px' }}>
+                        <span className="variation-badge">
                           {item.variations}
                         </span>
                       </td>
@@ -389,7 +376,6 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
                 <select
                   className="input-field"
                   id="pcat"
-                  style={{ background: 'white' }}
                   value={addCategory}
                   onChange={(e) => setAddCategory(e.target.value)}
                 >
@@ -433,9 +419,9 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
                   onChange={(e) => setAddStock(e.target.value)}
                 />
               </div>
-              <div className="details-actions" style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button className="btn btn-outline" style={{ width: 'auto', padding: '12px 24px' }} onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button className="btn btn-maroon" style={{ width: 'auto', padding: '12px 24px' }} onClick={saveNewProduct}>Save Product</button>
+              <div className="modal-footer-actions">
+                <button className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button className="btn btn-maroon" onClick={saveNewProduct}>Save Product</button>
               </div>
             </div>
           </div>

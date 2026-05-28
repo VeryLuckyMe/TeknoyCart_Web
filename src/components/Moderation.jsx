@@ -199,7 +199,6 @@ export default function Moderation({ showToast, supabaseClient }) {
         </div>
         <button
           className="btn btn-outline"
-          style={{ height: '38px', fontSize: '13px' }}
           onClick={fetchVendors}
           disabled={loading}
         >
@@ -211,29 +210,29 @@ export default function Moderation({ showToast, supabaseClient }) {
         <div className="stat-card">
           <div className="stat-header">
             <span>Pending Reviews</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning)' }}>⏳</div>
+            <div className="stat-icon-wrapper icon-warning">⏳</div>
           </div>
           <div className="stat-value">{pendingCount}</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--warning)', fontWeight: 600 }}>Verification required</span>
+            <span style={{ color: 'var(--warning)', fontWeight: 650 }}>Verification required</span>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span>Verified Vendors</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success)' }}>✓</div>
+            <div className="stat-icon-wrapper icon-success">✓</div>
           </div>
           <div className="stat-value">{verifiedCount}</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--success)', fontWeight: 600 }}>Approved profiles</span>
+            <span style={{ color: 'var(--success)', fontWeight: 650 }}>Approved profiles</span>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
             <span>Rejected/Revoked</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error)' }}>✕</div>
+            <div className="stat-icon-wrapper icon-error">✕</div>
           </div>
           <div className="stat-value">{rejectedCount}</div>
           <div className="stat-change">
@@ -244,17 +243,17 @@ export default function Moderation({ showToast, supabaseClient }) {
         <div className="stat-card">
           <div className="stat-header">
             <span>Action Required</span>
-            <div className="stat-icon-wrapper" style={{ backgroundColor: 'var(--cit-gold-alpha)', color: 'var(--cit-gold-dark)' }}>⚠️</div>
+            <div className="stat-icon-wrapper icon-gold">⚠️</div>
           </div>
           <div className="stat-value">{flaggedCount}</div>
           <div className="stat-change">
-            <span style={{ color: 'var(--error)', fontWeight: 600 }}>Flagged reports</span>
+            <span style={{ color: 'var(--error)', fontWeight: 650 }}>Flagged reports</span>
           </div>
         </div>
       </div>
 
       <div className="content-card">
-        <div className="card-header" style={{ flexWrap: 'wrap', gap: '16px' }}>
+        <div className="card-header card-header-wrap">
           <div className="moderation-tabs">
             {['all', 'Pending', 'Flagged'].map((status) => (
               <button
@@ -284,7 +283,7 @@ export default function Moderation({ showToast, supabaseClient }) {
 
         <div className="data-table-wrapper">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+            <div className="empty-state">
               <div style={{ fontSize: '24px', marginBottom: '12px' }}>⟳</div>
               Syncing live vendor queue from database...
             </div>
@@ -302,7 +301,7 @@ export default function Moderation({ showToast, supabaseClient }) {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan="5" className="empty-state">
                       No student vendor approvals in this queue.
                     </td>
                   </tr>
@@ -313,23 +312,23 @@ export default function Moderation({ showToast, supabaseClient }) {
                     if (v.status === 'Flagged') statusBadgeClass = 'badge-flagged';
                     if (v.status === 'Rejected') statusBadgeClass = 'badge-flagged';
 
-                    const emailStyle = (v.email === 'Email mismatch' || (!v.email.endsWith('@cit.edu') && !v.email.endsWith('@cit.edu') && v.email !== 'N/A'))
-                      ? { color: 'var(--error)', fontWeight: 700, fontStyle: 'italic' }
-                      : { color: 'var(--text-muted)' };
+                    const emailClass = (v.email === 'Email mismatch' || (!v.email.endsWith('@cit.edu') && v.email !== 'N/A'))
+                      ? 'email-error-text'
+                      : 'email-muted-text';
 
                     return (
                       <tr key={v.id}>
                         <td>
-                          <div style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{v.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{v.college}</div>
+                          <div className="log-buyer">{v.name}</div>
+                          <div className="log-seller">{v.college}</div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 500 }}>{v.studentId}</div>
-                          <div style={{ fontSize: '11px', ...emailStyle, marginTop: '2px' }}>{v.email}</div>
+                          <div className={emailClass}>{v.email}</div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 500 }}>{v.date}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{v.elapsed}</div>
+                          <div className="log-seller">{v.elapsed}</div>
                         </td>
                         <td>
                           <span className={`badge ${statusBadgeClass}`}>{v.status}</span>
@@ -348,7 +347,7 @@ export default function Moderation({ showToast, supabaseClient }) {
                           ) : v.status === 'Verified' ? (
                             <button className="btn btn-decline" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => declineVendor(v.id)}>Revoke Access</button>
                           ) : (
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Access Terminated</span>
+                            <span className="terminated-text">Access Terminated</span>
                           )}
                         </td>
                       </tr>
@@ -364,7 +363,7 @@ export default function Moderation({ showToast, supabaseClient }) {
           <div className="pagination-info">
             Showing {filtered.length} of {vendors.length} entries
             {supabaseClient && !loading && (
-              <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>● Live DB</span>
+              <span className="live-db-indicator">● Live DB</span>
             )}
           </div>
           <div className="pagination-btns">
