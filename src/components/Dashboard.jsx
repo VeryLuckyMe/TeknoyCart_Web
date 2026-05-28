@@ -180,9 +180,19 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
         <div className="stat-card">
           <div className="stat-header">
             <span>Total Sales</span>
-            <div className="stat-icon-wrapper icon-success">₱</div>
+            <div className="stat-icon-wrapper icon-success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '16px', height: '16px' }}>
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
           </div>
-          <div className="stat-value">₱ {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>
+            <div className="stat-value">₱ {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <svg width="56" height="24" viewBox="0 0 56 24" style={{ overflow: 'visible', stroke: 'var(--success)', strokeWidth: 2, fill: 'none' }}>
+              <path d="M0,18 Q14,2 28,14 T56,4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <div className="stat-change">
             <span style={{ color: 'var(--success)', fontWeight: 650 }}>+24%</span> vs last semester
           </div>
@@ -191,9 +201,20 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
         <div className="stat-card">
           <div className="stat-header">
             <span>Active Listings</span>
-            <div className="stat-icon-wrapper icon-maroon">🛍️</div>
+            <div className="stat-icon-wrapper icon-maroon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px' }}>
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+            </div>
           </div>
-          <div className="stat-value">{activeCatalogCount} Items</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>
+            <div className="stat-value">{activeCatalogCount} Items</div>
+            <svg width="56" height="24" viewBox="0 0 56 24" style={{ overflow: 'visible', stroke: 'var(--cit-maroon)', strokeWidth: 2, fill: 'none' }}>
+              <path d="M0,8 Q14,20 28,8 T56,12" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <div className="stat-change">
             <span style={{ color: 'var(--cit-maroon)', fontWeight: 650 }}>Live sync</span> database feed
           </div>
@@ -202,9 +223,18 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
         <div className="stat-card">
           <div className="stat-header">
             <span>Completed Orders</span>
-            <div className="stat-icon-wrapper icon-info">✓</div>
+            <div className="stat-icon-wrapper icon-info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '16px', height: '16px' }}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
           </div>
-          <div className="stat-value">{completedOrdersCount}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>
+            <div className="stat-value">{completedOrdersCount}</div>
+            <svg width="56" height="24" viewBox="0 0 56 24" style={{ overflow: 'visible', stroke: 'var(--info)', strokeWidth: 2, fill: 'none' }}>
+              <path d="M0,16 Q14,4 28,12 T56,2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <div className="stat-change">
             <span style={{ color: 'var(--info)', fontWeight: 650 }}>98.2%</span> handoff rate
           </div>
@@ -213,9 +243,18 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
         <div className="stat-card">
           <div className="stat-header">
             <span>Active Vendors</span>
-            <div className="stat-icon-wrapper icon-gold">🛡️</div>
+            <div className="stat-icon-wrapper icon-gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px' }}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
           </div>
-          <div className="stat-value">{activeVendors} verified</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>
+            <div className="stat-value">{activeVendors} verified</div>
+            <svg width="56" height="24" viewBox="0 0 56 24" style={{ overflow: 'visible', stroke: 'var(--cit-gold)', strokeWidth: 2, fill: 'none' }}>
+              <path d="M0,12 Q14,2 28,18 T56,6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <div className="stat-change">
             <span style={{ color: 'var(--cit-maroon)', fontWeight: 650 }}>100% verified</span> institutional emails
           </div>
