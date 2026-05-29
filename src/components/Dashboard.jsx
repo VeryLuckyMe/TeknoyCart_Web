@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Dashboard({ products, orders, showToast, supabaseClient, currentRole }) {
   const [animate, setAnimate] = useState(false);
@@ -384,6 +384,17 @@ export default function Dashboard({ products, orders, showToast, supabaseClient,
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>
             <div className="stat-value">{activeVendors} verified</div>
             <svg width="56" height="24" viewBox="0 0 56 24" style={{ overflow: 'visible', stroke: 'var(--cit-gold)', strokeWidth: 2, fill: 'none' }}>
+              <path d="M0,12 Q14,2 28,18 T56,6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div className="stat-change">
+            <span style={{ color: 'var(--cit-maroon)', fontWeight: 650 }}>100% verified</span> institutional emails
+          </div>
+        </div>
+      </div>
+
+      <div className="two-column-equal">
+        <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Product Categories Distribution</h2>
           </div>

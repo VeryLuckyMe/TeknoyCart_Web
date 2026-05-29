@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Orders from './components/Orders';
 import Inventory from './components/Inventory';
 import Moderation from './components/Moderation';
+import Login from './components/Login';
 import { supabase } from './services/supabase';
 
 // ── Fallback demo data (used when Supabase tables are empty or unreachable) ──
@@ -57,13 +58,24 @@ const CATEGORY_MAP = {
 };
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [currentRole, setCurrentRole] = useState('ADMIN'); // 'ADMIN' or 'SELLER'
+  const [currentRole, setCurrentRole] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    return saved ? JSON.parse(saved).role : 'ADMIN';
+  });
   const [products, setProducts]   = useState(FALLBACK_PRODUCTS);
   const [orders, setOrders]       = useState(FALLBACK_ORDERS);
   const [toast, setToast]         = useState(null);
   const [dbConnected, setDbConnected] = useState(null); // null=checking, true=live, false=offline
-  const [currentSellerId, setCurrentSellerId] = useState('usr-seller-1'); // Default seller scope for seller mode
+  const [currentSellerId, setCurrentSellerId] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    const user = saved ? JSON.parse(saved) : null;
+    return user && user.role === 'SELLER' ? user.id : 'usr-seller-1';
+  });
 
   // ── Toast helper ──
   const showToast = (message, isError = false) => {
@@ -308,6 +320,31 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentRole('ADMIN');
+    setCurrentSellerId('usr-seller-1');
+    localStorage.removeItem('teknoycart_user');
+    showToast('Session terminated successfully.');
+  };
+
+  if (!currentUser) {
+    return (
+      <Login
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setCurrentRole(user.role);
+          if (user.role === 'SELLER') {
+            setCurrentSellerId(user.id);
+          }
+          localStorage.setItem('teknoycart_user', JSON.stringify(user));
+          showToast(`Welcome back, ${user.name}! Successful entry.`);
+        }}
+        supabaseClient={supabase}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -316,6 +353,8 @@ export default function App() {
         dbConnected={dbConnected} 
         currentRole={currentRole}
         onToggleRole={setCurrentRole}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       <main className="main-wrapper">

@@ -1,6 +1,5 @@
-import React from 'react';
 
-export default function Sidebar({ activeTab, onSwitchTab, dbConnected, currentRole, onToggleRole }) {
+export default function Sidebar({ activeTab, onSwitchTab, dbConnected, currentRole, onToggleRole, currentUser, onLogout }) {
   const menuItems = [
     {
       id: 'dashboard',
@@ -63,27 +62,29 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected, currentRo
       </div>
 
       {/* Role Selection Switcher Deck (MEMORABLE MULTI-STATE SLIDER CAPSULE) */}
-      <div className="role-switcher-container">
-        <div className={`role-slider-glider ${currentRole === 'SELLER' ? 'right' : 'left'}`} />
-        <button
-          className={`role-switcher-btn ${currentRole === 'ADMIN' ? 'active' : ''}`}
-          onClick={() => {
-            onToggleRole('ADMIN');
-            onSwitchTab('dashboard');
-          }}
-        >
-          🔑 Admin
-        </button>
-        <button
-          className={`role-switcher-btn ${currentRole === 'SELLER' ? 'active' : ''}`}
-          onClick={() => {
-            onToggleRole('SELLER');
-            onSwitchTab('dashboard');
-          }}
-        >
-          🎒 Seller
-        </button>
-      </div>
+      {!currentUser && (
+        <div className="role-switcher-container">
+          <div className={`role-slider-glider ${currentRole === 'SELLER' ? 'right' : 'left'}`} />
+          <button
+            className={`role-switcher-btn ${currentRole === 'ADMIN' ? 'active' : ''}`}
+            onClick={() => {
+              onToggleRole('ADMIN');
+              onSwitchTab('dashboard');
+            }}
+          >
+            🔑 Admin
+          </button>
+          <button
+            className={`role-switcher-btn ${currentRole === 'SELLER' ? 'active' : ''}`}
+            onClick={() => {
+              onToggleRole('SELLER');
+              onSwitchTab('dashboard');
+            }}
+          >
+            🎒 Seller
+          </button>
+        </div>
+      )}
 
       <nav className="sidebar-nav">
         <ul className="nav-list">
@@ -100,6 +101,23 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected, currentRo
           ))}
         </ul>
       </nav>
+
+      {currentUser && (
+        <div className="sidebar-profile-capsule">
+          <div className="sidebar-profile-info">
+            <div className="sidebar-profile-avatar">
+              {currentUser.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="sidebar-profile-meta">
+              <div className="sidebar-profile-name">{currentUser.name}</div>
+              <div className="sidebar-profile-role">{currentUser.role}</div>
+            </div>
+          </div>
+          <button className="btn-sidebar-logout" onClick={onLogout}>
+            <span>🚪</span> Sign Out
+          </button>
+        </div>
+      )}
 
       <div className="sidebar-footer">
         <div className={`db-status-pill ${dbConnected === true ? 'live' : dbConnected === false ? 'offline' : 'connecting'}`}>

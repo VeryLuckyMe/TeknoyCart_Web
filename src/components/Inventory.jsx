@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function Inventory({ products, setProducts, showToast, supabaseClient, onSync, currentRole, currentSellerId }) {
   const [selectedInvCategory, setSelectedInvCategory] = useState('all');
@@ -19,7 +19,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
     try {
       await onSync();
       showToast('✅ Synced live inventory catalog from Supabase!');
-    } catch (e) {
+    } catch {
       showToast('Failed to sync catalog.', true);
     } finally {
       setSyncing(false);
@@ -131,7 +131,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
       link.click();
       document.body.removeChild(link);
       showToast('✅ Successfully downloaded inventory checklist: teknoycart_inventory_checklist.csv!');
-    } catch (e) {
+    } catch {
       showToast('Failed to export inventory spreadsheet.', true);
     }
   };
@@ -282,7 +282,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
             </div>
             
             <div className="horizontal-tabs">
-              {['all', 'Apparel', 'Electronics', 'Books', 'Drawing Tools', 'low-stock'].map((cat) => (
+              {['all', 'Uniforms', 'Electronics', 'Books', 'Drawing Tools', 'low-stock'].map((cat) => (
                 <button
                   key={cat}
                   className={`tab-btn ${selectedInvCategory === cat ? 'active' : ''}`}
@@ -390,7 +390,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
                   value={addCategory}
                   onChange={(e) => setAddCategory(e.target.value)}
                 >
-                  <option value="Apparel">Apparel</option>
+                  <option value="Uniforms">Uniforms</option>
                   <option value="Books">Books</option>
                   <option value="Drawing Tools">Drawing Tools</option>
                   <option value="Electronics">Electronics</option>
