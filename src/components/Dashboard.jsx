@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function Dashboard({ products, orders, showToast, supabaseClient }) {
+export default function Dashboard({ products, orders, showToast, supabaseClient, currentRole }) {
   const [animate, setAnimate] = useState(false);
   const [activeVendors, setActiveVendors] = useState(3);
 
@@ -163,6 +163,138 @@ export default function Dashboard({ products, orders, showToast, supabaseClient 
     }
   };
 
+  if (currentRole === 'SELLER') {
+    // ── PREMIUM SELLER CONTEXT VIEW (Luxury Wildcat Minimalist Tech) ──
+    const sellerRevenue = liveCompletedOrders.reduce((sum, o) => sum + o.amount, 0) + (liveCompletedOrders.length === 0 ? 3200.00 : 0);
+    const sellerItemsCount = products.length;
+
+    return (
+      <div className="main-container active">
+        <div className="header-section">
+          <div className="header-title-wrapper">
+            <h1 className="page-title">Wildcat Store Analytics</h1>
+            <p className="page-subtitle">Personalized store management console, sales indicators, and direct ledger logs.</p>
+          </div>
+          <div className="header-actions">
+            <button className="btn btn-outline" onClick={() => handleExport('csv')}>Export Ledger</button>
+          </div>
+        </div>
+
+        {/* Bento Grid Stats (Luxury Mesh Deck Layout) */}
+        <div className="stats-grid">
+          <div className="stat-card seller-highlight">
+            <div className="stat-header">
+              <span>My Total Earnings</span>
+              <div className="stat-icon-wrapper icon-gold">
+                <span>₱</span>
+              </div>
+            </div>
+            <div className="stat-value">₱ {sellerRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <div className="stat-change">
+              <span style={{ color: 'var(--cit-gold)', fontWeight: 650 }}>88% payout</span> success rate
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-header">
+              <span>Listed Merchandise</span>
+              <div className="stat-icon-wrapper icon-maroon">
+                <span>📦</span>
+              </div>
+            </div>
+            <div className="stat-value">{sellerItemsCount} active</div>
+            <div className="stat-change">
+              Available in campus feed
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-header">
+              <span>Orders Pending</span>
+              <div className="stat-icon-wrapper icon-info">
+                <span>⚡</span>
+              </div>
+            </div>
+            <div className="stat-value">
+              {orders.filter(o => o.status === 'PAYMENT_SUBMITTED' || o.status === 'INQUIRY_SENT').length} deals
+            </div>
+            <div className="stat-change">
+              Active peer negotiations
+            </div>
+          </div>
+        </div>
+
+        {/* Sales charts & recent activities block */}
+        <div className="two-column-layout">
+          <div className="content-card">
+            <div className="card-header">
+              <h3 className="card-title">Direct Sales Breakdown</h3>
+            </div>
+            <div style={{ padding: '24px' }}>
+              <div className="category-chart-container">
+                {categories.map((cat) => {
+                  const count = getCategoryCount(cat);
+                  const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                  return (
+                    <div key={cat} className="category-bar-row">
+                      <span className="category-bar-label">{cat}</span>
+                      <div className="category-bar-track">
+                        <div 
+                          className="category-bar-fill" 
+                          style={{ width: `${percent}%`, background: 'linear-gradient(90deg, var(--cit-maroon), var(--cit-gold))' }} 
+                        />
+                      </div>
+                      <span className="category-bar-count">{count} units</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="content-card">
+            <div className="card-header">
+              <h3 className="card-title">Recent Store Activities</h3>
+            </div>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <tbody>
+                  {recentLogs.length === 0 ? (
+                    <tr>
+                      <td style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        No transactions logged yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    recentLogs.map((log) => (
+                      <tr key={log.id}>
+                        <td style={{ padding: '12px 20px' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{log.id}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{log.time}</div>
+                        </td>
+                        <td style={{ padding: '12px 20px' }}>
+                          <span className={`badge ${
+                            log.status === 'COMPLETED' || log.status === 'Completed' || log.status === 'READY_FOR_PICKUP' ? 'badge-verified' : 'badge-pending'
+                          }`}>
+                            {log.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 20px', fontWeight: 700, color: 'var(--cit-maroon)' }}>
+                          ₱ {log.amount.toFixed(0)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── ORIGINAL GENERAL ADMIN DASHBOARD VIEW ──
   return (
     <div className="main-container active">
       <div className="header-section">

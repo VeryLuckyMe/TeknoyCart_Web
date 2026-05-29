@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-export default function Inventory({ products, setProducts, showToast, supabaseClient, onSync }) {
+export default function Inventory({ products, setProducts, showToast, supabaseClient, onSync, currentRole, currentSellerId }) {
   const [selectedInvCategory, setSelectedInvCategory] = useState('all');
   const [searchStr, setSearchStr] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -19,7 +19,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
     try {
       await onSync();
       showToast('✅ Synced live inventory catalog from Supabase!');
-    } catch (e) {
+    } catch {
       showToast('Failed to sync catalog.', true);
     } finally {
       setSyncing(false);
@@ -55,7 +55,6 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
 
         if (supabaseClient && item._supabaseId) {
           try {
-            // Get the first variant's inventory row and update it
             const { data: variants } = await supabaseClient
               .from('product_variants')
               .select('variant_id')
@@ -132,7 +131,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
       link.click();
       document.body.removeChild(link);
       showToast('✅ Successfully downloaded inventory checklist: teknoycart_inventory_checklist.csv!');
-    } catch (e) {
+    } catch {
       showToast('Failed to export inventory spreadsheet.', true);
     }
   };
@@ -169,14 +168,19 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
 
     if (supabaseClient) {
       try {
-        // First get a valid seller_id (first seller in DB, or admin placeholder)
-        const { data: sellers } = await supabaseClient
-          .from('users')
-          .select('user_id')
-          .eq('role', 'SELLER')
-          .limit(1);
+        let sellerId = currentSellerId;
 
-        const sellerId = sellers?.[0]?.user_id;
+        // Fallback checks if currentSellerId is empty
+        if (!sellerId) {
+          const { data: sellers } = await supabaseClient
+            .from('users')
+            .select('user_id')
+            .eq('role', 'SELLER')
+            .limit(1);
+
+          sellerId = sellers?.[0]?.user_id;
+        }
+
         if (!sellerId) throw new Error('No seller account found in database. Run seed script first.');
 
         const { data: inserted, error: insertErr } = await supabaseClient
@@ -184,7 +188,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
           .insert({
             seller_id: sellerId,
             name: newProd.name,
-            description: addVariations.trim() || 'Admin-listed product via TeknoyCart console.',
+            description: addVariations.trim() || 'Seller-listed product via Web storefront.',
             base_price: price,
             category_id: CATEGORY_NAME_TO_ID[addCategory] || 5,
             status: 'ACTIVE',
@@ -202,7 +206,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
             variant_name: 'Standard',
             variant_value: addVariations.trim() || 'Default',
             additional_price: 0,
-            sku: 'SKU-ADM-' + inserted.product_id.substring(0, 6).toUpperCase(),
+            sku: 'SKU-SEL-' + inserted.product_id.substring(0, 6).toUpperCase(),
           })
           .select()
           .single();
@@ -235,8 +239,14 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
     <div className="main-container active">
       <div className="header-section">
         <div className="header-title-wrapper">
-          <h1 className="page-title">Catalog & Inventory</h1>
-          <p className="page-subtitle">Track listed items, configure stock variances, and add direct retail inventory (SRS FR-09).</p>
+          <h1 className="page-title">
+            {currentRole === 'SELLER' ? 'My Store Catalog' : 'Catalog & Inventory'}
+          </h1>
+          <p className="page-subtitle">
+            {currentRole === 'SELLER' 
+              ? 'Manage your personal pre-loved product list, update stock quantities, and view live feedback (FR-09).'
+              : 'Track listed items, configure stock variances, and add direct retail inventory (SRS FR-09).'}
+          </p>
         </div>
         <div className="header-actions">
           {onSync && (
@@ -252,6 +262,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
           <button className="btn btn-maroon" onClick={() => setShowAddModal(true)}>Add Product</button>
         </div>
       </div>
+
 
       <div className="content-card">
         <div className="card-header card-header-column">
@@ -271,7 +282,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
             </div>
             
             <div className="horizontal-tabs">
-              {['all', 'Apparel', 'Electronics', 'Books', 'Drawing Tools', 'low-stock'].map((cat) => (
+              {['all', 'Uniforms', 'Electronics', 'Books', 'Drawing Tools', 'low-stock'].map((cat) => (
                 <button
                   key={cat}
                   className={`tab-btn ${selectedInvCategory === cat ? 'active' : ''}`}
@@ -379,7 +390,7 @@ export default function Inventory({ products, setProducts, showToast, supabaseCl
                   value={addCategory}
                   onChange={(e) => setAddCategory(e.target.value)}
                 >
-                  <option value="Apparel">Apparel</option>
+                  <option value="Uniforms">Uniforms</option>
                   <option value="Books">Books</option>
                   <option value="Drawing Tools">Drawing Tools</option>
                   <option value="Electronics">Electronics</option>

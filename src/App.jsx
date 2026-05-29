@@ -1,25 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Orders from './components/Orders';
 import Inventory from './components/Inventory';
 import Moderation from './components/Moderation';
+import Login from './components/Login';
 import { supabase } from './services/supabase';
 
 // ── Fallback demo data (used when Supabase tables are empty or unreachable) ──
 const FALLBACK_PRODUCTS = [
-  { id: 'PRD-29381', name: 'Official Engineering Shirt',        category: 'Uniforms',      price: 350.00,  variations: 'S, M, L, XL',  stock: 142 },
-  { id: 'PRD-11024', name: 'Calculus Early Transcendentals',   category: 'Books',         price: 1200.00, variations: '9th Ed., Used', stock: 3   },
-  { id: 'PRD-99832', name: 'Arduino Uno R3 Starter Kit',       category: 'Electronics',   price: 850.00,  variations: 'Base, + Sensors', stock: 12  },
-  { id: 'PRD-45512', name: 'Engineering Drawing Table',         category: 'Drawing Tools', price: 450.00,  variations: 'Adjustable',    stock: 8   },
-  { id: 'PRD-77201', name: 'CIT-U PE Uniform (Medium)',        category: 'Uniforms',      price: 250.00,  variations: 'Unisex, M',     stock: 5   },
+  { id: 'PRD-29381', name: 'Official Engineering Shirt',        category: 'Uniforms',      price: 350.00,  variations: 'S, M, L, XL',  stock: 142, seller_id: 'usr-seller-1' },
+  { id: 'PRD-11024', name: 'Calculus Early Transcendentals',   category: 'Books',         price: 1200.00, variations: '9th Ed., Used', stock: 3, seller_id: 'usr-seller-1' },
+  { id: 'PRD-99832', name: 'Arduino Uno R3 Starter Kit',       category: 'Electronics',   price: 850.00,  variations: 'Base, + Sensors', stock: 12, seller_id: 'usr-seller-2' },
+  { id: 'PRD-45512', name: 'Engineering Drawing Table',         category: 'Drawing Tools', price: 450.00,  variations: 'Adjustable',    stock: 8, seller_id: 'usr-seller-1' },
+  { id: 'PRD-77201', name: 'CIT-U PE Uniform (Medium)',        category: 'Uniforms',      price: 250.00,  variations: 'Unisex, M',     stock: 5, seller_id: 'usr-seller-2' },
 ];
 
 const FALLBACK_ORDERS = [
   {
     id: 'ORD-2024-8891', buyer: 'Maria Santos', studentId: '19-1234-567',
     dept: 'College of Computer Studies', contact: '0912 345 6789', time: '2 mins ago',
-    status: 'PAYMENT_SUBMITTED', amount: 1450.00,
+    status: 'PAYMENT_SUBMITTED', amount: 1450.00, seller_id: 'usr-seller-1',
     items: [
       { name: 'Official College Uniform (Female)', desc: 'Size: Medium | Qty: 1', price: 1200.00 },
       { name: 'CIT-U Executive Lanyard',           desc: 'Color: Maroon | Qty: 2', price: 250.00 },
@@ -29,7 +30,7 @@ const FALLBACK_ORDERS = [
   {
     id: 'ORD-2024-8890', buyer: 'John Doe', studentId: '20-9876-543',
     dept: 'College of Engineering & Architecture', contact: '0923 456 7890', time: '1 hour ago',
-    status: 'READY_FOR_PICKUP', amount: 450.00,
+    status: 'READY_FOR_PICKUP', amount: 450.00, seller_id: 'usr-seller-2',
     items: [
       { name: 'Official Engineering Shirt', desc: 'Size: Large | Qty: 1', price: 350.00 },
       { name: 'CIT-U Sticker Pack',         desc: 'Qty: 1',              price: 100.00 },
@@ -39,7 +40,7 @@ const FALLBACK_ORDERS = [
   {
     id: 'ORD-2024-8889', buyer: 'Jane Smith', studentId: '21-5555-123',
     dept: 'College of Business Administration', contact: '0934 567 8901', time: '3 hours ago',
-    status: 'PAYMENT_SUBMITTED', amount: 850.00,
+    status: 'PAYMENT_SUBMITTED', amount: 850.00, seller_id: 'usr-seller-1',
     items: [
       { name: 'Calculus Early Transcendentals', desc: '9th Ed. | Qty: 1', price: 850.00 },
     ],
@@ -57,11 +58,24 @@ const CATEGORY_MAP = {
 };
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [currentRole, setCurrentRole] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    return saved ? JSON.parse(saved).role : 'ADMIN';
+  });
   const [products, setProducts]   = useState(FALLBACK_PRODUCTS);
   const [orders, setOrders]       = useState(FALLBACK_ORDERS);
   const [toast, setToast]         = useState(null);
   const [dbConnected, setDbConnected] = useState(null); // null=checking, true=live, false=offline
+  const [currentSellerId, setCurrentSellerId] = useState(() => {
+    const saved = localStorage.getItem('teknoycart_user');
+    const user = saved ? JSON.parse(saved) : null;
+    return user && user.role === 'SELLER' ? user.id : 'usr-seller-1';
+  });
 
   // ── Toast helper ──
   const showToast = (message, isError = false) => {
@@ -73,7 +87,7 @@ export default function App() {
   const syncSupabase = useCallback(async () => {
     try {
       // 1. Fetch products joined with variants + inventory for stock qty
-      const { data: prodData, error: prodErr } = await supabase
+      let query = supabase
         .from('products')
         .select(`
           product_id,
@@ -82,6 +96,7 @@ export default function App() {
           base_price,
           status,
           category_id,
+          seller_id,
           product_variants (
             variant_id,
             variant_name,
@@ -92,20 +107,24 @@ export default function App() {
             )
           )
         `)
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: false });
+        .eq('status', 'ACTIVE');
+
+      // If in seller role, we can surgically filter to show ONLY their products
+      if (currentRole === 'SELLER' && currentSellerId) {
+        query = query.eq('seller_id', currentSellerId);
+      }
+
+      const { data: prodData, error: prodErr } = await query.order('created_at', { ascending: false });
 
       if (prodErr) throw prodErr;
 
       if (prodData && prodData.length > 0) {
         const formatted = prodData.map((p, idx) => {
-          // Flatten variants: summarise all variant names
           const variants = p.product_variants || [];
           const varLabel = variants.length > 0
             ? variants.map(v => v.variant_value).filter(v => v !== 'Default').join(', ') || 'Standard'
             : 'Standard';
 
-          // Sum total stock across all variants
           const totalStock = variants.reduce((acc, v) => {
             const inv = v.inventory;
             return acc + (Array.isArray(inv) ? inv.reduce((a, i) => a + (i.stock_qty || 0), 0) : (inv?.stock_qty || 0));
@@ -118,21 +137,26 @@ export default function App() {
             category: CATEGORY_MAP[p.category_id] || 'Others',
             price: parseFloat(p.base_price || 0),
             variations: varLabel,
-            stock: totalStock || 12, // default 12 if no inventory row yet
+            stock: totalStock || 12,
+            seller_id: p.seller_id,
           };
         });
 
         setProducts(formatted);
         setDbConnected(true);
-        console.log(`✅ Synced ${formatted.length} products from Supabase.`);
+        console.log(`✅ Synced ${formatted.length} products for role ${currentRole}`);
       } else {
-        // No rows yet, stay with fallback but mark connected
+        // No products found in DB for role, show either fallback filtered or empty array
+        if (currentRole === 'SELLER') {
+          setProducts(FALLBACK_PRODUCTS.filter(p => p.seller_id === currentSellerId));
+        } else {
+          setProducts(FALLBACK_PRODUCTS);
+        }
         setDbConnected(true);
-        console.log('ℹ️ Supabase connected but products table is empty. Showing demo data.');
       }
 
       // 2. Fetch orders with relational joins for real identities, item names, and proofs
-      const { data: orderData, error: orderErr } = await supabase
+      let ordersQuery = supabase
         .from('orders')
         .select(`
           order_id,
@@ -160,7 +184,13 @@ export default function App() {
             image_url,
             status
           )
-        `)
+        `);
+
+      if (currentRole === 'SELLER' && currentSellerId) {
+        ordersQuery = ordersQuery.eq('seller_id', currentSellerId);
+      }
+
+      const { data: orderData, error: orderErr } = await ordersQuery
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -178,7 +208,6 @@ export default function App() {
           const itemName = product.name || 'Campus Merchandise';
           const itemDesc = `Size/Type: ${variant.variant_value || 'Default'} | Qty: ${o.quantity}`;
           
-          // Get GCash receipt proof if exists
           const receiptUrl = (o.payment_proofs && o.payment_proofs.length > 0) 
             ? o.payment_proofs[0].image_url 
             : 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300';
@@ -189,47 +218,144 @@ export default function App() {
             buyer: buyerName,
             studentId: studentId,
             dept: buyerEmail.endsWith('@cit.edu') ? 'College of Computer Studies' : 'College of Engineering & Architecture',
-            contact: '09' + String(10000000 + (idx * 179) % 90000000), // pseudo-random valid contact
+            contact: '09' + String(10000000 + (idx * 179) % 90000000), 
             time: new Date(o.created_at).toLocaleDateString(),
             status: o.status,
             amount: parseFloat(o.total_amount || 0),
             items: [{ name: itemName, desc: itemDesc, price: parseFloat(o.unit_price || 0) }],
             receipt: receiptUrl,
-            refNum: ''
+            refNum: '',
+            seller_id: o.seller_id,
           };
         });
         setOrders(formattedOrders);
+      } else {
+        if (currentRole === 'SELLER') {
+          setOrders(FALLBACK_ORDERS.filter(o => o.seller_id === currentSellerId));
+        } else {
+          setOrders(FALLBACK_ORDERS);
+        }
       }
 
     } catch (err) {
       setDbConnected(false);
-      console.warn('⚠️ Supabase unreachable, running in offline demo mode.', err.message || err);
+      console.warn('⚠️ Supabase sync exception, loaded fallback static view.', err);
     }
-  }, []);
+  }, [currentRole, currentSellerId]);
 
-  // ── Supabase initial sync ──
+  // ── Supabase initial sync and sync on role changes ──
   useEffect(() => {
     syncSupabase();
-  }, [syncSupabase]);
+  }, [syncSupabase, currentRole]);
+
+  // Hook into getting a real seller ID from the active users list to make seller view organic
+  useEffect(() => {
+    const fetchRealSeller = async () => {
+      try {
+        const { data: sellers } = await supabase
+          .from('users')
+          .select('user_id')
+          .eq('role', 'SELLER')
+          .limit(1);
+        if (sellers && sellers.length > 0) {
+          setCurrentSellerId(sellers[0].user_id);
+        }
+      } catch (e) {
+        console.warn('Could not locate dynamic seller ID.', e);
+      }
+    };
+    if (dbConnected) {
+      fetchRealSeller();
+    }
+  }, [dbConnected]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard products={products} orders={orders} showToast={showToast} dbConnected={dbConnected} supabaseClient={supabase} />;
+        return (
+          <Dashboard 
+            products={products} 
+            orders={orders} 
+            showToast={showToast} 
+            dbConnected={dbConnected} 
+            supabaseClient={supabase} 
+            currentRole={currentRole}
+          />
+        );
       case 'orders':
-        return <Orders orders={orders} setOrders={setOrders} showToast={showToast} supabaseClient={supabase} />;
+        return (
+          <Orders 
+            orders={orders} 
+            setOrders={setOrders} 
+            showToast={showToast} 
+            supabaseClient={supabase} 
+            currentRole={currentRole}
+          />
+        );
       case 'inventory':
-        return <Inventory products={products} setProducts={setProducts} showToast={showToast} supabaseClient={supabase} onSync={syncSupabase} />;
+        return (
+          <Inventory 
+            products={products} 
+            setProducts={setProducts} 
+            showToast={showToast} 
+            supabaseClient={supabase} 
+            onSync={syncSupabase} 
+            currentRole={currentRole}
+            currentSellerId={currentSellerId}
+          />
+        );
       case 'moderation':
         return <Moderation showToast={showToast} supabaseClient={supabase} />;
       default:
-        return <Dashboard products={products} orders={orders} showToast={showToast} dbConnected={dbConnected} supabaseClient={supabase} />;
+        return (
+          <Dashboard 
+            products={products} 
+            orders={orders} 
+            showToast={showToast} 
+            dbConnected={dbConnected} 
+            supabaseClient={supabase} 
+            currentRole={currentRole}
+          />
+        );
     }
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentRole('ADMIN');
+    setCurrentSellerId('usr-seller-1');
+    localStorage.removeItem('teknoycart_user');
+    showToast('Session terminated successfully.');
+  };
+
+  if (!currentUser) {
+    return (
+      <Login
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setCurrentRole(user.role);
+          if (user.role === 'SELLER') {
+            setCurrentSellerId(user.id);
+          }
+          localStorage.setItem('teknoycart_user', JSON.stringify(user));
+          showToast(`Welcome back, ${user.name}! Successful entry.`);
+        }}
+        supabaseClient={supabase}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} onSwitchTab={setActiveTab} dbConnected={dbConnected} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onSwitchTab={setActiveTab} 
+        dbConnected={dbConnected} 
+        currentRole={currentRole}
+        onToggleRole={setCurrentRole}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
 
       <main className="main-wrapper">
         {renderActiveTab()}
@@ -244,3 +370,4 @@ export default function App() {
     </div>
   );
 }
+
