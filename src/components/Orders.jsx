@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Orders({ orders, setOrders, showToast, supabaseClient }) {
+export default function Orders({ orders, setOrders, showToast, supabaseClient, currentRole }) {
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -123,10 +123,17 @@ export default function Orders({ orders, setOrders, showToast, supabaseClient })
     <div className="main-container active">
       <div className="header-section margin-bottom-lg">
         <div className="header-title-wrapper">
-          <h1 className="page-title">Order Verification Hub</h1>
-          <p className="page-subtitle">Confirm P2P GCash transfers, cross-check reference codes, and finalize handoffs (FR-18/FR-19).</p>
+          <h1 className="page-title">
+            {currentRole === 'SELLER' ? 'Store Sales & Orders' : 'Order Verification Hub'}
+          </h1>
+          <p className="page-subtitle">
+            {currentRole === 'SELLER'
+              ? 'Fulfill active student pickup orders, verify reference codes, and finalize cash/GCash handoffs (FR-18).'
+              : 'Confirm P2P GCash transfers, cross-check reference codes, and finalize handoffs (FR-18/FR-19).'}
+          </p>
         </div>
       </div>
+
 
       <div className="two-column-layout">
         {/* Left Column: Orders Cards List */}

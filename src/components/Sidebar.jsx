@@ -1,10 +1,10 @@
 import React from 'react';
 
-export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
+export default function Sidebar({ activeTab, onSwitchTab, dbConnected, currentRole, onToggleRole }) {
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Wildcat Dashboard',
+      label: currentRole === 'SELLER' ? 'Seller Analytics' : 'Wildcat Dashboard',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="3" width="7" height="9" rx="1" />
@@ -16,7 +16,7 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
     },
     {
       id: 'orders',
-      label: 'Order Verification',
+      label: currentRole === 'SELLER' ? 'Incoming Orders' : 'Order Verification',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="9" cy="21" r="1" />
@@ -27,7 +27,7 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
     },
     {
       id: 'inventory',
-      label: 'Catalog & Inventory',
+      label: currentRole === 'SELLER' ? 'My Store Catalog' : 'Catalog & Inventory',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -36,7 +36,8 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
         </svg>
       )
     },
-    {
+    // Only Administrators can moderate items
+    ...(currentRole === 'ADMIN' ? [{
       id: 'moderation',
       label: 'Wildcat Moderation',
       icon: (
@@ -44,7 +45,7 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
       )
-    }
+    }] : [])
   ];
 
   return (
@@ -55,8 +56,33 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
         </div>
         <div className="brand-details">
           <span className="brand-name">TeknoyCart</span>
-          <span className="brand-subtitle">Admin System v1.0</span>
+          <span className="brand-subtitle">
+            {currentRole === 'SELLER' ? 'Wildcat Storefront' : 'Admin System v1.0'}
+          </span>
         </div>
+      </div>
+
+      {/* Role Selection Switcher Deck (MEMORABLE MULTI-STATE SLIDER CAPSULE) */}
+      <div className="role-switcher-container">
+        <div className={`role-slider-glider ${currentRole === 'SELLER' ? 'right' : 'left'}`} />
+        <button
+          className={`role-switcher-btn ${currentRole === 'ADMIN' ? 'active' : ''}`}
+          onClick={() => {
+            onToggleRole('ADMIN');
+            onSwitchTab('dashboard');
+          }}
+        >
+          🔑 Admin
+        </button>
+        <button
+          className={`role-switcher-btn ${currentRole === 'SELLER' ? 'active' : ''}`}
+          onClick={() => {
+            onToggleRole('SELLER');
+            onSwitchTab('dashboard');
+          }}
+        >
+          🎒 Seller
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -89,3 +115,4 @@ export default function Sidebar({ activeTab, onSwitchTab, dbConnected }) {
     </aside>
   );
 }
+

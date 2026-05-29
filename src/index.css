@@ -215,6 +215,68 @@ body {
   stroke: var(--cit-gold);
 }
 
+/* Premium Role Switcher Capsule */
+.role-switcher-container {
+  display: flex;
+  position: relative;
+  background-color: var(--neutral-grey);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.role-slider-glider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: calc(50% - 4px);
+  background: linear-gradient(135deg, var(--cit-maroon), var(--cit-maroon-light));
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 10px var(--cit-maroon-glow);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+.role-slider-glider.left {
+  transform: translateX(0);
+}
+
+.role-slider-glider.right {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, var(--cit-gold), var(--cit-gold-hover));
+  box-shadow: 0 4px 10px var(--cit-gold-alpha);
+}
+
+.role-switcher-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 2;
+  transition: var(--transition-base);
+  text-align: center;
+}
+
+.role-switcher-btn.active {
+  color: white;
+}
+
+.role-switcher-btn:nth-child(3).active {
+  color: var(--cit-gold-dark);
+}
+
+.stat-card.seller-highlight {
+  border-left: 5px solid var(--cit-gold);
+  background: linear-gradient(135deg, var(--bg-card), var(--cit-gold-alpha));
+}
+
 .sidebar-footer {
   margin-top: auto;
   border-top: 1px dashed var(--neutral-grey);
